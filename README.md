@@ -27,6 +27,8 @@ Este projeto contém uma stack completa de desenvolvimento com Laravel, Vue.js, 
 2. **Inicie os serviços (TUDO AUTOMÁTICO!):**
    ```bash
    docker-compose up -d
+   se acaso nao iniciar aguarde um momento pois o compose install ainda esta rodando, se necessario voce pode conferir o progresso com o comando 
+   docker-compose logs app
    ```
 
 ## 🌐 Acessos

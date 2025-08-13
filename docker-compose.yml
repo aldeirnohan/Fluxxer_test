@@ -9,7 +9,6 @@ services:
     working_dir: /var/www/
     volumes:
       - ./backend:/var/www
-      - ./backend/vendor:/var/www/vendor
     networks:
       - fluxxer_network
     depends_on:
@@ -35,10 +34,13 @@ services:
         sleep 10 &&
         echo '📝 Configurando Laravel...' &&
         if [ ! -f .env ]; then cp .env.example .env; fi &&
+        echo '📦 Instalando dependências do Composer...' &&
+        composer install --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader &&
+        echo '🔑 Gerando chave da aplicação...' &&
         php artisan key:generate --force &&
         echo '🗄️ Executando migrations...' &&
         php artisan migrate --force &&
-        echo '�� Limpando caches...' &&
+        echo ' Limpando caches...' &&
         php artisan config:clear &&
         php artisan route:clear &&
         php artisan cache:clear &&
@@ -79,6 +81,18 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8000
+    command: >
+      sh -c "
+        echo ' Verificando dependências do Node.js...' &&
+        if [ ! -d 'node_modules' ] || [ ! -f 'package-lock.json' ]; then
+          echo '📥 Instalando dependências...' &&
+          npm install
+        else
+          echo '✅ Dependências já instaladas!'
+        fi &&
+        echo ' Iniciando servidor de desenvolvimento...' &&
+        npm run dev
+      "
 
   # Banco de dados PostgreSQL
   postgres:
