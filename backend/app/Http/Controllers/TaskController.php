@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Jobs\ProcessTask;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -50,6 +51,9 @@ class TaskController extends Controller
                 'title' => $validated['title'],
                 'status' => 'pending',
             ]);
+
+            // Processar a task imediatamente
+            ProcessTask::dispatch($task->id);
 
             // Retornar resposta de sucesso
             return response()->json([
