@@ -13,8 +13,10 @@ services:
     networks:
       - fluxxer_network
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -27,6 +29,23 @@ services:
       - QUEUE_CONNECTION=redis
       - HORIZON_DOMAIN=localhost
       - HORIZON_PATH=horizon
+    command: >
+      sh -c "
+        echo '🚀 Aguardando dependências...' &&
+        sleep 10 &&
+        echo '📝 Configurando Laravel...' &&
+        if [ ! -f .env ]; then cp .env.example .env; fi &&
+        php artisan key:generate --force &&
+        echo '🗄️ Executando migrations...' &&
+        php artisan migrate --force &&
+        echo '�� Limpando caches...' &&
+        php artisan config:clear &&
+        php artisan route:clear &&
+        php artisan cache:clear &&
+        echo '✅ Laravel configurado! Iniciando PHP-FPM e Horizon...' &&
+        php artisan horizon &
+        php-fpm
+      "
 
   # Servidor web Nginx para Laravel
   nginx:
@@ -78,6 +97,12 @@ services:
       - POSTGRES_USER=fluxxer_user
       - POSTGRES_PASSWORD=fluxxer_password
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fluxxer_user -d fluxxer_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   # Redis para cache e filas
   redis:
@@ -90,55 +115,16 @@ services:
       - redis_data:/data
     networks:
       - fluxxer_network
-  # Laravel Horizon para gerenciamento de filas
-  horizon:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: fluxxer_horizon
-    restart: unless-stopped
-    working_dir: /var/www/
-    volumes:
-      - ./backend:/var/www
-    networks:
-      - fluxxer_network
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_DATABASE=fluxxer_db
-      - DB_USERNAME=fluxxer_user
-      - DB_PASSWORD=fluxxer_password
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=fluxxer_redis_password
-      - QUEUE_CONNECTION=redis
-    command: php artisan horizon
-
-  # phpMyAdmin para gerenciamento do PostgreSQL (opcional)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: fluxxer_pgadmin
-    restart: unless-stopped
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - fluxxer_network
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@fluxxer.com
-      - PGADMIN_DEFAULT_PASSWORD=admin123
-      - PGADMIN_CONFIG_SERVER_MODE=False
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  pgadmin_data:
     driver: local
 
 networks:

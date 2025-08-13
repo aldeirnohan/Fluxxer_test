@@ -4,13 +4,11 @@ Este projeto contém uma stack completa de desenvolvimento com Laravel, Vue.js, 
 
 ## 🚀 Serviços Incluídos
 
-- **Laravel API** (Porta 8000) - Backend da aplicação
+- **Laravel API** (Porta 8000) - Backend da aplicação + Horizon integrado
 - **Vue.js Frontend** (Porta 3000) - Interface do usuário
 - **PostgreSQL** (Porta 5432) - Banco de dados principal
 - **Redis** (Porta 6379) - Cache e filas
-- **Laravel Horizon** - Gerenciamento de filas
 - **Nginx** - Servidor web para Laravel
-- **pgAdmin** (Porta 5050) - Interface de administração do PostgreSQL
 
 ## 📋 Pré-requisitos
 
@@ -26,28 +24,9 @@ Este projeto contém uma stack completa de desenvolvimento com Laravel, Vue.js, 
    cd fluxxer_test
    ```
 
-2. **Configure o ambiente Laravel:**
-   ```bash
-   # Copie o arquivo de exemplo
-   cp backend/env.example backend/.env
-   
-   # Gere a chave da aplicação
-   docker-compose run --rm app php artisan key:generate
-   ```
-
-3. **Inicie os serviços:**
+2. **Inicie os serviços (TUDO AUTOMÁTICO!):**
    ```bash
    docker-compose up -d
-   ```
-
-4. **Execute as migrações:**
-   ```bash
-   docker-compose run --rm app php artisan migrate
-   ```
-
-5. **Instale as dependências do frontend:**
-   ```bash
-   docker-compose run --rm frontend npm install
    ```
 
 ## 🌐 Acessos
@@ -55,9 +34,8 @@ Este projeto contém uma stack completa de desenvolvimento com Laravel, Vue.js, 
 - **Laravel API:** http://localhost:8000
 - **Vue.js Frontend:** http://localhost:3000
 - **Laravel Horizon:** http://localhost:8000/horizon
-- **pgAdmin:** http://localhost:5050
-  - Email: admin@fluxxer.com
-  - Senha: admin123
+- **PostgreSQL:** localhost:5432
+- **Redis:** localhost:6379
 
 ## 📁 Estrutura de Diretórios
 
