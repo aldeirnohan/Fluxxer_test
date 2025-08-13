@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     supervisor \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    libpq-dev \
+    && docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -26,7 +27,7 @@ WORKDIR /var/www
 COPY . /var/www
 
 # Instalar dependências do Composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install
 
 # Definir permissões
 RUN chown -R www-data:www-data /var/www \
@@ -37,4 +38,4 @@ RUN chown -R www-data:www-data /var/www \
 EXPOSE 9000
 
 # Comando padrão
-CMD ["php-fpm"] 
+CMD ["php-fpm"]

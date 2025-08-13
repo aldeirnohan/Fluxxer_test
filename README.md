@@ -64,11 +64,19 @@ Este projeto contém uma stack completa de desenvolvimento com Laravel, Vue.js, 
 ```
 fluxxer_test/
 ├── docker-compose.yml
+├── .gitignore
+├── .dockerignore
 ├── backend/
 │   ├── Dockerfile
-│   └── env.example
+│   ├── app/
+│   ├── config/
+│   ├── database/
+│   ├── routes/
+│   └── .env (criado a partir de env.example)
 ├── frontend/
-│   └── Dockerfile
+│   ├── package.json
+│   ├── src/
+│   └── vite.config.js
 ├── docker/
 │   └── nginx/
 │       └── conf.d/
@@ -106,6 +114,10 @@ docker-compose run --rm app php artisan tinker
 # Instalar dependências
 docker-compose run --rm app composer install
 docker-compose run --rm app composer update
+
+# Criar migrations e models
+docker-compose exec app php artisan make:migration create_tasks_table
+docker-compose exec app php artisan make:model Task
 ```
 
 ### Frontend
@@ -116,27 +128,66 @@ docker-compose run --rm frontend npm run build
 docker-compose run --rm frontend npm install package-name
 ```
 
-### Banco de Dados
+### Banco de Dados PostgreSQL
 ```bash
 # Acessar PostgreSQL
 docker-compose exec postgres psql -U fluxxer_user -d fluxxer_db
 
+# Criar banco de dados
+docker-compose exec postgres createdb -U fluxxer_user fluxxer_db
+
 # Backup do banco
 docker-compose exec postgres pg_dump -U fluxxer_user fluxxer_db > backup.sql
+
+# Ver logs do PostgreSQL
+docker-compose logs postgres
+```
+
+### Redis
+```bash
+# Acessar CLI do Redis
+docker-compose exec redis redis-cli -a fluxxer_redis_password
+
+# Ver logs do Redis
+docker-compose logs redis
 ```
 
 ## 🔒 Variáveis de Ambiente
 
 ### Laravel (.env)
-- `DB_HOST=postgres`
-- `DB_DATABASE=fluxxer_db`
-- `DB_USERNAME=fluxxer_user`
-- `DB_PASSWORD=fluxxer_password`
-- `REDIS_HOST=redis`
-- `REDIS_PASSWORD=fluxxer_redis_password`
+```env
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=fluxxer_db
+DB_USERNAME=fluxxer_user
+DB_PASSWORD=fluxxer_password
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=fluxxer_redis_password
+
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
+CACHE_DRIVER=redis
+```
 
 ### Frontend
 - `VITE_API_URL=http://localhost:8000`
+
+## 🗄️ Configuração do Banco de Dados
+
+### PostgreSQL
+- **Host:** postgres (nome do container)
+- **Porta:** 5432
+- **Usuário:** fluxxer_user
+- **Senha:** fluxxer_password
+- **Banco:** fluxxer_db
+
+### Redis
+- **Host:** redis (nome do container)
+- **Porta:** 6379
+- **Senha:** fluxxer_redis_password
 
 ## 🚨 Solução de Problemas
 
@@ -153,6 +204,30 @@ ports:
 docker-compose run --rm app chmod -R 755 storage bootstrap/cache
 ```
 
+### Problemas de conexão com banco
+```bash
+# Verificar se PostgreSQL está rodando
+docker-compose ps postgres
+
+# Ver logs do PostgreSQL
+docker-compose logs postgres
+
+# Testar conexão
+docker-compose exec app php artisan migrate:status
+```
+
+### Reconstruir containers
+```bash
+# Parar e remover containers
+docker-compose down
+
+# Reconstruir imagens
+docker-compose build --no-cache
+
+# Subir novamente
+docker-compose up -d
+```
+
 ### Limpar volumes
 ```bash
 # Remover todos os dados (CUIDADO!)
@@ -161,10 +236,36 @@ docker-compose down -v
 
 ## 📝 Notas
 
-- O Redis está configurado com senha para maior segurança
-- O Horizon está configurado para usar Redis como driver de filas
+- **PostgreSQL** é usado como banco de dados principal (não SQLite)
+- O **Redis** está configurado com senha para maior segurança
+- O **Horizon** está configurado para usar Redis como driver de filas
 - Todos os serviços estão na mesma rede Docker para comunicação interna
 - Os volumes são persistentes, então os dados não são perdidos ao parar os containers
+- O **Laravel** está configurado para usar PostgreSQL por padrão
+
+## 🚀 Desenvolvimento
+
+### Criar nova migration
+```bash
+docker-compose exec app php artisan make:migration create_nome_tabela_table
+```
+
+### Criar novo model
+```bash
+docker-compose exec app php artisan make:model NomeModel
+```
+
+### Executar migrações
+```bash
+docker-compose exec app php artisan migrate
+docker-compose exec app php artisan migrate:rollback
+docker-compose exec app php artisan migrate:fresh
+```
+
+### Acessar Tinker
+```bash
+docker-compose exec app php artisan tinker
+```
 
 ## 🤝 Contribuição
 
